@@ -3,224 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List Application</title>
+    <title>To-Do List</title>
     <style>
-        /* Styles for the main application container */
+        /* Basic styling for the to-do list application */
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
         }
+
         .todo-container {
-            background-color: white;
+            background-color: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 400px;
+            width: 300px;
         }
-        h2 {
+
+        h1 {
             text-align: center;
             margin-bottom: 20px;
         }
-        .input-section {
+
+        .input-area {
             display: flex;
-            justify-content: space-between;
             margin-bottom: 20px;
         }
-        #taskInputField {
-            flex-grow: 1;
-            padding: 8px;
+
+        #new-task-input {
+            flex: 1;
+            padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            margin-right: 10px;
         }
-        #addTaskButton {
-            background-color: #28a745;
-            color: white;
+
+        #add-task-button {
+            padding: 10px;
             border: none;
-            padding: 8px 16px;
+            background-color: #28a745;
+            color: #fff;
             border-radius: 4px;
             cursor: pointer;
+            margin-left: 10px;
         }
-        #addTaskButton:hover {
-            background-color: #218838;
-        }
-        #taskList {
-            list-style: none;
+
+        #task-list {
+            list-style-type: none;
             padding: 0;
         }
+
         .task-item {
+            display: flex;
+            flex-direction: column;
             padding: 10px;
             border-bottom: 1px solid #ccc;
         }
-        .task-item.completed .task-text {
+
+        .task-item.completed {
             text-decoration: line-through;
             color: #888;
         }
-        .task-content {
+
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .task-item .task-content {
             display: flex;
             align-items: center;
         }
-        .task-text {
-            flex-grow: 1;
-        }
-        .button-group {
+
+        .task-item .task-actions {
             display: flex;
-            justify-content: flex-start;
+            justify-content: flex-start; /* Align buttons to the left */
             margin-top: 5px;
         }
-        .edit-button, .remove-button {
-            padding: 5px 10px;
-            margin-right: 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .edit-button {
-            background-color: #007bff;
-            color: white;
-        }
-        .edit-button:hover {
-            background-color: #0056b3;
-        }
-        .remove-button {
+
+        .task-item button {
             background-color: #dc3545;
-            color: white;
-        }
-        .remove-button:hover {
-            background-color: #c82333;
-        }
-        #editDialog {
-            position: fixed;
-            background-color: white;
-            border: 1px solid #ccc;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: none;
-        }
-        #editDialog input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        #editDialog button {
-            padding: 8px 16px;
             border: none;
+            color: #fff;
+            padding: 5px 10px;
             border-radius: 4px;
             cursor: pointer;
+            margin-left: 5px;
         }
-        #editDialog button:first-child {
-            background-color: #007bff;
-            color: white;
-            margin-right: 10px;
-        }
-        #editDialog button:last-child {
-            background-color: #6c757d;
-            color: white;
+
+        .task-item button.edit {
+            background-color: #ffc107;
         }
     </style>
 </head>
 <body>
     <div class="todo-container">
-        <h2>To-Do List</h2>
-        <div class="input-section">
-            <input type="text" id="taskInputField" placeholder="Enter task">
-            <button id="addTaskButton">Add Task</button>
+        <h1>To-Do List</h1>
+        <div class="input-area">
+            <!-- Input field for entering new tasks -->
+            <input type="text" id="new-task-input" placeholder="Enter new task">
+            <!-- Button to add a new task -->
+            <button id="add-task-button">Add Task</button>
         </div>
-        <ul id="taskList"></ul>
-    </div>
-    <div class="dialog-box" id="editDialog">
-        <h3>Edit Task</h3>
-        <input type="text" id="editTaskInput">
-        <button onclick="saveEditedTask()">OK</button>
-        <button onclick="cancelTaskEdit()">Cancel</button>
+        <!-- List to display all tasks -->
+        <ul id="task-list"></ul>
     </div>
 
     <script>
-        // Get DOM elements for task management
-        const taskInputField = document.getElementById("taskInputField");
-        const addTaskButton = document.getElementById("addTaskButton");
-        const taskList = document.getElementById("taskList");
-        const editDialog = document.getElementById("editDialog");
-        const editTaskInput = document.getElementById("editTaskInput");
-        let currentlyEditedTaskItem = null;
+        // Wait for the DOM to load before executing the script
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get references to DOM elements
+            const newTaskInput = document.getElementById('new-task-input');
+            const addTaskButton = document.getElementById('add-task-button');
+            const taskList = document.getElementById('task-list');
 
-        // Add a new task to the list when the Add Task button is clicked
-        addTaskButton.addEventListener("click", () => {
-            const taskText = taskInputField.value.trim();
-            if (taskText) {
-                const taskItem = document.createElement("li");
-                taskItem.className = "task-item";
+            // Add a new task when the "Add Task" button is clicked
+            addTaskButton.addEventListener('click', () => {
+                const taskText = newTaskInput.value.trim(); // Get the task text and remove extra spaces
+                if (taskText !== '') {
+                    addTaskToList(taskText); // Add the task to the list
+                    newTaskInput.value = ''; // Clear the input field
+                }
+            });
+
+            // Use event delegation to handle clicks on task items (Edit, Remove, Complete/Incomplete)
+            taskList.addEventListener('click', (event) => {
+                const taskItem = event.target.closest('.task-item'); // Get the closest task item
+                if (event.target.classList.contains('edit')) {
+                    editTaskInList(taskItem); // Handle edit button click
+                } else if (event.target.classList.contains('remove')) {
+                    removeTaskFromList(taskItem); // Handle remove button click
+                } else if (event.target.type === 'checkbox') {
+                    toggleTaskCompletion(taskItem); // Handle checkbox click
+                }
+            });
+
+            // Function to add a new task to the list
+            function addTaskToList(taskText) {
+                const taskItem = document.createElement('li'); // Create a new list item
+                taskItem.className = 'task-item'; // Add the task-item class
                 taskItem.innerHTML = `
                     <div class="task-content">
-                        <input type="checkbox" class="complete-checkbox">
-                        <span class="task-text">${taskText}</span>
+                        <input type="checkbox"> <!-- Checkbox for marking task as complete -->
+                        <span>${taskText}</span> <!-- Task text -->
                     </div>
-                    <div class="button-group">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">Remove</button>
+                    <div class="task-actions">
+                        <button class="edit">Edit</button> <!-- Edit button -->
+                        <button class="remove">Remove</button> <!-- Remove button -->
                     </div>
                 `;
-                taskList.appendChild(taskItem);
-                taskInputField.value = "";
-            }
-        });
-
-        // Handle all task actions (complete, remove, edit) using event delegation
-        taskList.addEventListener("click", (event) => {
-            const clickedElement = event.target;
-            const taskItem = clickedElement.closest(".task-item");
-
-            // Toggle task completion status when checkbox is clicked
-            if (clickedElement.classList.contains("complete-checkbox")) {
-                taskItem.classList.toggle("completed");
+                taskList.appendChild(taskItem); // Add the task to the task list
             }
 
-            // Remove task when Remove button is clicked
-            if (clickedElement.classList.contains("remove-button")) {
-                taskList.removeChild(taskItem);
-            }
-
-            // Initiate task editing when Edit button is clicked
-            if (clickedElement.classList.contains("edit-button")) {
-                currentlyEditedTaskItem = taskItem;
-                const taskText = taskItem.querySelector(".task-text").textContent;
-                editTaskInput.value = taskText;
-                editDialog.style.display = "block";
-                editDialog.style.top = `${event.clientY}px`;
-                editDialog.style.left = `${event.clientX}px`;
-            }
-        });
-
-        // Save changes to the edited task
-        function saveEditedTask() {
-            if (currentlyEditedTaskItem) {
-                const newTaskText = editTaskInput.value.trim();
-                if (newTaskText) {
-                    currentlyEditedTaskItem.querySelector(".task-text").textContent = newTaskText;
+            // Function to edit an existing task
+            function editTaskInList(taskItem) {
+                const taskTextElement = taskItem.querySelector('span'); // Get the task text element
+                const newTaskText = prompt('Edit your task:', taskTextElement.textContent); // Prompt for new task text
+                if (newTaskText !== null) {
+                    taskTextElement.textContent = newTaskText; // Update the task text
                 }
-                editDialog.style.display = "none";
-                currentlyEditedTaskItem = null;
             }
-        }
 
-        // Cancel the task editing process
-        function cancelTaskEdit() {
-            editDialog.style.display = "none";
-            currentlyEditedTaskItem = null;
-        }
+            // Function to remove a task from the list
+            function removeTaskFromList(taskItem) {
+                taskItem.remove(); // Remove the task item from the DOM
+            }
 
-        // Add task with Enter key press
-        taskInputField.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                addTaskButton.click();
+            // Function to toggle task completion (strike-through and color change)
+            function toggleTaskCompletion(taskItem) {
+                taskItem.classList.toggle('completed'); // Toggle the completed class
             }
         });
     </script>
